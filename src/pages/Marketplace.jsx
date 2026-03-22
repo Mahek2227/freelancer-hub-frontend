@@ -310,19 +310,29 @@ export default function Marketplace() {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex gap-3 pt-4">
-                        <button
-                          onClick={() => navigate(`/projects/${project._id}`)}
-                          className="flex-1 px-4 py-2 border border-indigo-500 text-indigo-600 rounded-lg hover:bg-indigo-50 transition font-medium"
-                        >
-                          View Details
-                        </button>
-                        {isFreelancer && project.status === 'open' && (
+                      <div className="space-y-2">
+                        <div className="flex gap-3">
                           <button
-                            onClick={() => setSelectedProposal(project)}
-                            className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition font-medium"
+                            onClick={() => navigate(`/projects/${project._id}`)}
+                            className="flex-1 px-4 py-2 border border-indigo-500 text-indigo-600 rounded-lg hover:bg-indigo-50 transition font-medium"
                           >
-                            Apply Now
+                            View Details
+                          </button>
+                          {isFreelancer && project.status === 'open' && (
+                            <button
+                              onClick={() => setSelectedProposal(project)}
+                              className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition font-medium"
+                            >
+                              Apply Now
+                            </button>
+                          )}
+                        </div>
+                        {isFreelancer && project.client && (
+                          <button
+                            onClick={() => navigate('/chat', { state: { startConversationWith: project.client._id } })}
+                            className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+                          >
+                            💬 Message Client
                           </button>
                         )}
                       </div>

@@ -21,6 +21,8 @@ export default function ProjectDetail() {
     message: '',
     fileUrl: '',
   });
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const user = JSON.parse(localStorage.getItem('user'));
   const isClient = user?.role === 'client';
@@ -52,7 +54,7 @@ export default function ProjectDetail() {
 
       // Fetch deliverables
       const deliverablesResponse = await axios.get(
-        `http://localhost:5000/api/deliverables?projectId=${projectId}`,
+        `http://localhost:5000/api/deliverables/${projectId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setDeliverables(deliverablesResponse.data);
@@ -65,7 +67,7 @@ export default function ProjectDetail() {
       setTasks(tasksResponse.data);
     } catch (error) {
       console.error('Error fetching project details:', error);
-      alert('Failed to load project details');
+      showToast('Failed to load project details', 'error');
     } finally {
       setLoading(false);
     }
@@ -83,35 +85,36 @@ export default function ProjectDetail() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert('Proposal submitted successfully!');
+      showToast('Proposal submitted successfully!', 'success');
       setShowProposalModal(false);
       setFormData({ cover_letter: '', bid_amount: '' });
       fetchProjectDetails();
     } catch (error) {
       console.error('Error submitting proposal:', error);
-      alert('Failed to submit proposal');
+      showToast('Failed to submit proposal', 'error');
     }
   };
 
   const handleSubmitDeliverable = async () => {
     try {
-      const token = localStorage.getToken();
+      const token = localStorage.getItem('token');
       await axios.post(
         'http://localhost:5000/api/deliverables',
         {
-          project: projectId,
-          ...deliverableForm,
+          projectId: projectId,
+          message: deliverableForm.message,
+          fileUrl: deliverableForm.fileUrl,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert('Deliverable submitted successfully!');
+      showToast('Deliverable submitted successfully!', 'success');
       setShowDeliverableModal(false);
       setDeliverableForm({ message: '', fileUrl: '' });
       fetchProjectDetails();
     } catch (error) {
       console.error('Error submitting deliverable:', error);
-      alert('Failed to submit deliverable');
+      showToast('Failed to submit deliverable', 'error');
     }
   };
 
@@ -124,11 +127,31 @@ export default function ProjectDetail() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert('Deliverable approved!');
+      showToast('Deliverable approved!', 'success');
       fetchProjectDetails();
     } catch (error) {
       console.error('Error approving deliverable:', error);
-      alert('Failed to approve deliverable');
+      showToast('Failed to approve deliverable', 'error');
+    }
+  };
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  };
+
+  const handleDeleteProject = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `http://localhost:5000/api/projects/${projectId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showToast('Project deleted successfully!', 'success');
+      setTimeout(() => navigate('/projects'), 2000);
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      showToast('Failed to delete project', 'error');
     }
   };
 
@@ -159,8 +182,21 @@ export default function ProjectDetail() {
     );
   }
 
+  // Toast Notification Component
+  const Toast = () => {
+    if (!toast.show) return null;
+    return (
+      <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium shadow-lg transition-all z-50 ${
+        toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+      }`}>
+        {toast.message}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-8">
+      <Toast />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <button
@@ -216,7 +252,13 @@ export default function ProjectDetail() {
                   {project.client?.total_projects_completed || 0} projects completed
                 </p>
               </div>
-              <div className="ml-auto">
+              <div className="ml-auto flex gap-3">
+                <button
+                  onClick={() => navigate('/chat', { state: { startConversationWith: project.client?._id } })}
+                  className="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 flex items-center gap-2"
+                >
+                  <span>💬</span> Message
+                </button>
                 <button
                   onClick={() => navigate(`/profile/${project.client?._id}`)}
                   className="px-6 py-2 border border-indigo-500 text-indigo-600 rounded-lg hover:bg-indigo-50"
@@ -321,6 +363,17 @@ export default function ProjectDetail() {
                   </div>
                 )}
 
+                {isOwner && (
+                  <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="w-full px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium"
+                    >
+                      🗑️ Delete Project
+                    </button>
+                  </div>
+                )}
+
                 {/* Project Details */}
                 <div className="bg-white rounded-2xl shadow-lg p-6">
                   <h3 className="font-semibold text-gray-900 mb-4">Project Details</h3>
@@ -420,7 +473,7 @@ export default function ProjectDetail() {
                             Deliverable from {deliverable.freelancer?.name}
                           </h4>
                           <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                            deliverable.status === 'submitted'
+                            deliverable.status === 'pending'
                               ? 'bg-blue-100 text-blue-800'
                               : 'bg-green-100 text-green-800'
                           }`}>
@@ -443,7 +496,7 @@ export default function ProjectDetail() {
                         </a>
                       )}
 
-                      {isOwner && deliverable.status === 'submitted' && (
+                      {isOwner && deliverable.status === 'pending' && (
                         <button
                           onClick={() => handleApproveDeliverable(deliverable._id)}
                           className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
@@ -615,6 +668,35 @@ export default function ProjectDetail() {
                 className="flex-1 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
               >
                 Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Delete Project?</h2>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete this project? This action cannot be undone.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  handleDeleteProject();
+                }}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium"
+              >
+                Delete
               </button>
             </div>
           </div>

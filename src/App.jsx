@@ -13,6 +13,9 @@ import Ratings from "./pages/Ratings";
 import Payments from "./pages/Payments";
 import Chat from "./pages/Chat";
 import KanbanBoard from "./pages/KanbanBoard";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import UpdatePassword from "./pages/UpdatePassword";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -110,6 +113,10 @@ function App() {
             }
           />
 
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
@@ -200,6 +207,7 @@ function App() {
             <Route path="/chat" element={<Chat />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/kanban/:projectId" element={<KanbanBoard />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
             <Route
               path="/freelancer-dashboard"
               element={

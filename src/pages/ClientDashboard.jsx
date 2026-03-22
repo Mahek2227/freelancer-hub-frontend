@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 function ClientDashboard() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [incomingProposals, setIncomingProposals] = useState([]);
@@ -265,12 +267,22 @@ function ClientDashboard() {
                       <p className="text-xs text-gray-600 mt-1">
                         Bid: <span className="font-bold">₹{proposal.bidAmount}</span>
                       </p>
-                      <a
-                        href={`/projects`}
-                        className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold mt-2 inline-block"
-                      >
-                        Review →
-                      </a>
+                      <div className="flex gap-2 mt-2">
+                        <a
+                          href={`/projects`}
+                          className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold inline-block"
+                        >
+                          Review →
+                        </a>
+                        {proposal.freelancer && (
+                          <button
+                            onClick={() => navigate('/chat', { state: { startConversationWith: proposal.freelancer._id } })}
+                            className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+                          >
+                            💬 Message
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

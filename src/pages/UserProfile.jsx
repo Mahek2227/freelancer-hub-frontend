@@ -236,7 +236,7 @@ export default function UserProfile() {
 
                 {/* Action Buttons */}
                 {isOwnProfile && (
-                  <div className="mt-4 flex gap-3">
+                  <div className="mt-4 flex gap-3 flex-wrap">
                     <button
                       onClick={() => setIsEditing(!isEditing)}
                       className="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition"
@@ -249,6 +249,30 @@ export default function UserProfile() {
                         className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
                       >
                         Save Changes
+                      </button>
+                    )}
+                    <button
+                      onClick={() => navigate('/update-password')}
+                      className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                    >
+                      🔐 Change Password
+                    </button>
+                  </div>
+                )}
+                {!isOwnProfile && (
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      onClick={() => navigate('/chat', { state: { startConversationWith: user._id } })}
+                      className="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition flex items-center gap-2"
+                    >
+                      <span>💬</span> Message
+                    </button>
+                    {user.role === 'freelancer' && (
+                      <button
+                        onClick={() => navigate('/projects/new', { state: { freelancerId: user._id } })}
+                        className="px-6 py-2 border border-indigo-500 text-indigo-600 rounded-lg hover:bg-indigo-50 transition"
+                      >
+                        Hire
                       </button>
                     )}
                   </div>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from '../api/axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Chat() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -17,6 +18,15 @@ export default function Chat() {
     fetchConversations();
   }, []);
 
+  // Handle navigation from other pages with startConversationWith parameter
+  useEffect(() => {
+    if (location.state?.startConversationWith && !loading) {
+      startConversation(location.state.startConversationWith);
+      // Clear the state to prevent calling multiple times
+      navigate('/chat', { replace: true });
+    }
+  }, [location.state?.startConversationWith, loading]);
+
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages();
@@ -29,32 +39,63 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Function to start a conversation with a freelancer/client
+  const startConversation = async (participantId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        'http://localhost:5000/api/messages/conversations',
+        { participantId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const otherParticipant = response.data.participants.find(p => p._id !== user._id);
+      const formattedConversation = {
+        _id: response.data._id,
+        id: response.data._id,
+        participantId: otherParticipant?._id,
+        participantName: otherParticipant?.name || 'Unknown',
+        participantAvatar: otherParticipant?.profile_picture_url || 'https://via.placeholder.com/40',
+        lastMessage: response.data.lastMessage || 'No messages yet',
+        lastMessageTime: response.data.lastMessageTime ? new Date(response.data.lastMessageTime) : new Date(),
+        unread: 0,
+        participants: response.data.participants,
+      };
+
+      setSelectedConversation(formattedConversation);
+      // Refresh conversations list
+      fetchConversations();
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      alert('Failed to start conversation');
+    }
+  };
+
   const fetchConversations = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      // Mock conversations for now
-      const mockConversations = [
-        {
-          id: '1',
-          participantId: '507f1f77bcf86cd799439011',
-          participantName: 'John Doe',
-          participantAvatar: 'https://via.placeholder.com/40',
-          lastMessage: 'Sounds good! Let me start working on it.',
-          lastMessageTime: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          unread: 2,
-        },
-        {
-          id: '2',
-          participantId: '507f1f77bcf86cd799439012',
-          participantName: 'Jane Smith',
-          participantAvatar: 'https://via.placeholder.com/40',
-          lastMessage: 'When can you deliver the first version?',
-          lastMessageTime: new Date(Date.now() - 5 * 60 * 60 * 1000),
+      const response = await axios.get('http://localhost:5000/api/messages/conversations', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      // Transform conversation data to match UI expectations
+      const formattedConversations = response.data.map(conv => {
+        const otherParticipant = conv.participants.find(p => p._id !== user._id);
+        return {
+          _id: conv._id,
+          id: conv._id,
+          participantId: otherParticipant?._id,
+          participantName: otherParticipant?.name || 'Unknown',
+          participantAvatar: otherParticipant?.profile_picture_url || 'https://via.placeholder.com/40',
+          lastMessage: conv.lastMessage || 'No messages yet',
+          lastMessageTime: conv.lastMessageTime ? new Date(conv.lastMessageTime) : new Date(),
           unread: 0,
-        },
-      ];
-      setConversations(mockConversations);
+          participants: conv.participants,
+        };
+      });
+      
+      setConversations(formattedConversations);
     } catch (error) {
       console.error('Error fetching conversations:', error);
     } finally {
@@ -66,31 +107,24 @@ export default function Chat() {
     if (!selectedConversation) return;
     try {
       const token = localStorage.getItem('token');
-      // Mock messages
-      const mockMessages = [
+      const response = await axios.get(
+        `http://localhost:5000/api/messages/${selectedConversation._id}`,
         {
-          id: '1',
-          senderId: selectedConversation.participantId,
-          senderName: selectedConversation.participantName,
-          text: 'Hi! I am interested in your project.',
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        },
-        {
-          id: '2',
-          senderId: user._id,
-          senderName: user.name,
-          text: 'Great! Can you start this week?',
-          timestamp: new Date(Date.now() - 23 * 60 * 60 * 1000),
-        },
-        {
-          id: '3',
-          senderId: selectedConversation.participantId,
-          senderName: selectedConversation.participantName,
-          text: 'Sounds good! Let me start working on it.',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        },
-      ];
-      setMessages(mockMessages);
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Transform message data to match UI expectations
+      const formattedMessages = response.data.map(msg => ({
+        id: msg._id,
+        senderId: msg.sender._id,
+        senderName: msg.sender.name,
+        text: msg.text,
+        timestamp: new Date(msg.createdAt),
+        isRead: msg.isRead,
+      }));
+      
+      setMessages(formattedMessages);
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -99,30 +133,25 @@ export default function Chat() {
   const handleSendMessage = async () => {
     if (!messageText.trim()) return;
 
-    const newMessage = {
-      id: Date.now().toString(),
-      senderId: user._id,
-      senderName: user.name,
-      text: messageText,
-      timestamp: new Date(),
-    };
-
-    setMessages([...messages, newMessage]);
-    setMessageText('');
-
     try {
       const token = localStorage.getItem('token');
-      // This would send to backend
-      // await axios.post(
-      //   `http://localhost:5000/api/messages`,
-      //   {
-      //     conversationId: selectedConversation.id,
-      //     text: messageText,
-      //   },
-      //   { headers: { Authorization: `Bearer ${token}` } }
-      // );
+      await axios.post(
+        'http://localhost:5000/api/messages',
+        {
+          conversationId: selectedConversation._id,
+          text: messageText,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setMessageText('');
+      // Refresh messages to show the new message
+      fetchMessages();
+      // Also refresh conversations to update last message time
+      fetchConversations();
     } catch (error) {
       console.error('Error sending message:', error);
+      alert('Failed to send message');
     }
   };
 

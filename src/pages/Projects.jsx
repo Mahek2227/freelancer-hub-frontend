@@ -21,7 +21,9 @@ function Projects() {
   const [deliverLink, setDeliverLink] = useState("");
   const [tasks, setTasks] = useState({});
   const [taskInput, setTaskInput] = useState("");
-
+  const [loadingTasks, setLoadingTasks] = useState({});
+  const [taskErrors, setTaskErrors] = useState({});
+  const [expandedTaskProject, setExpandedTaskProject] = useState(null);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -44,28 +46,76 @@ function Projects() {
     fetchProjects();
   };
   const fetchTasks = async (projectId) => {
-  const res = await api.get(`/tasks/${projectId}`);
-
-  setTasks((prev) => ({
-    ...prev,
-    [projectId]: res.data,
-  }));
+    try {
+      setLoadingTasks(prev => ({ ...prev, [projectId]: true }));
+      setTaskErrors(prev => ({ ...prev, [projectId]: null }));
+      
+      const res = await api.get(`/tasks/${projectId}`);
+      setTasks((prev) => ({
+        ...prev,
+        [projectId]: res.data,
+      }));
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      setTaskErrors(prev => ({ 
+        ...prev, 
+        [projectId]: 'Failed to load tasks. Try again.' 
+      }));
+    } finally {
+      setLoadingTasks(prev => ({ ...prev, [projectId]: false }));
+    }
   };
 
   const createTask = async (projectId) => {
-  await api.post("/tasks", {
-    projectId,
-    title: taskInput,
-  });
+    if (!taskInput.trim()) {
+      alert('Please enter a task title');
+      return;
+    }
 
-  setTaskInput("");
-  fetchTasks(projectId);
+    try {
+      await api.post("/tasks", {
+        projectId,
+        title: taskInput,
+      });
+      
+      setTaskInput("");
+      await fetchTasks(projectId);
+    } catch (error) {
+      console.error('Error creating task:', error);
+      setTaskErrors(prev => ({ 
+        ...prev, 
+        [projectId]: 'Failed to add task. Try again.' 
+      }));
+    }
   };
 
- const updateTask = async (id, status, projectId) => {
-  await api.put(`/tasks/${id}`, { status });
-  fetchTasks(projectId);
-};
+  const updateTask = async (id, status, projectId) => {
+    try {
+      await api.put(`/tasks/${id}`, { status });
+      await fetchTasks(projectId);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      setTaskErrors(prev => ({ 
+        ...prev, 
+        [projectId]: 'Failed to update task. Try again.' 
+      }));
+    }
+  };
+
+  const deleteTask = async (taskId, projectId) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      await fetchTasks(projectId);
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      setTaskErrors(prev => ({ 
+        ...prev, 
+        [projectId]: 'Failed to delete task. Try again.' 
+      }));
+    }
+  };
   
   // FETCH PROPOSALS
   const fetchProposals = async (projectId) => {
@@ -253,40 +303,125 @@ function Projects() {
                   Deliver Work
                 </button>
               )}
-              <div className="mt-4">
+              {/* TASKS SECTION - Professionally styled */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-bold text-gray-900">📋 Tasks</h4>
+                  <button
+                    onClick={() => setExpandedTaskProject(expandedTaskProject === project._id ? null : project._id)}
+                    className="text-indigo-600 hover:text-indigo-700 font-semibold text-sm transition"
+                  >
+                    {expandedTaskProject === project._id ? '▼ Hide' : '▶ Show'} 
+                  </button>
+                </div>
 
-  <h4 className="font-bold mb-2">Tasks</h4>
+                {expandedTaskProject === project._id && (
+                  <div className="space-y-4 bg-gray-50 rounded-xl p-4">
+                    {/* Load Tasks Button */}
+                    {!tasks[project._id] && (
+                      <button
+                        onClick={() => fetchTasks(project._id)}
+                        disabled={loadingTasks[project._id]}
+                        className="w-full py-2 px-4 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-semibold rounded-lg transition disabled:opacity-50"
+                      >
+                        {loadingTasks[project._id] ? '⏳ Loading Tasks...' : '📋 Load Tasks'}
+                      </button>
+                    )}
 
-  <button onClick={() => fetchTasks(project._id)}>
-    Load Tasks
-  </button>
+                    {/* Error Message */}
+                    {taskErrors[project._id] && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-red-700 font-medium text-sm">⚠️ {taskErrors[project._id]}</p>
+                      </div>
+                    )}
 
-  <input
-    value={taskInput}
-    onChange={(e) => setTaskInput(e.target.value)}
-    placeholder="New task"
-  />
+                    {/* Loading Spinner */}
+                    {loadingTasks[project._id] && (
+                      <div className="flex justify-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                      </div>
+                    )}
 
-  <button onClick={() => createTask(project._id)}>
-    Add
-  </button>
+                    {/* Add New Task Form */}
+                    {tasks[project._id] && (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={taskInput}
+                          onChange={(e) => setTaskInput(e.target.value)}
+                          placeholder="Type task name..."
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') createTask(project._id);
+                          }}
+                          className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-300"
+                        />
+                        <button
+                          onClick={() => createTask(project._id)}
+                          className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-semibold rounded-lg transition text-sm"
+                        >
+                          ➕ Add
+                        </button>
+                      </div>
+                    )}
 
-  {tasks[project._id]?.map((t) => (
-    <div key={t._id}>
-      <p>{t.title}</p>
-      <p>{t.status}</p>
+                    {/* Tasks List */}
+                    {tasks[project._id] && tasks[project._id].length > 0 ? (
+                      <div className="space-y-2">
+                        {tasks[project._id].map((task) => (
+                          <div
+                            key={task._id}
+                            className="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between hover:shadow-md transition"
+                          >
+                            <div className="flex-1">
+                              <p className="text-gray-900 font-medium text-sm">{task.title}</p>
+                              <span className={`inline-block text-xs font-semibold px-2 py-1 rounded mt-1 ${
+                                task.status === 'todo' ? 'bg-gray-100 text-gray-700' :
+                                task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                                'bg-green-100 text-green-700'
+                              }`}>
+                                {task.status === 'todo' ? '📌 To Do' : 
+                                 task.status === 'in-progress' ? '⚡ In Progress' : 
+                                 '✅ Done'}
+                              </span>
+                            </div>
 
-      <button onClick={() => updateTask(t._id, "in-progress", project._id)}>
-        Start
-      </button>
-
-      <button onClick={() => updateTask(t._id, "done", project._id)}>
-        Done
-      </button>
-    </div>
-  ))}
-
-</div>
+                            <div className="flex gap-2 ml-2">
+                              {task.status === 'todo' && (
+                                <button
+                                  onClick={() => updateTask(task._id, 'in-progress', project._id)}
+                                  className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded text-xs transition"
+                                >
+                                  Start
+                                </button>
+                              )}
+                              {task.status === 'in-progress' && (
+                                <button
+                                  onClick={() => updateTask(task._id, 'done', project._id)}
+                                  className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white font-semibold rounded text-xs transition"
+                                >
+                                  Complete
+                                </button>
+                              )}
+                              <button
+                                onClick={() => deleteTask(task._id, project._id)}
+                                className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold rounded text-xs transition"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      tasks[project._id] && (
+                        <div className="text-center py-4">
+                          <p className="text-gray-500 text-sm font-medium">No tasks yet. Create your first one!</p>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
               {/* CLIENT - VIEW PROPOSALS */}
               {user?.role === "client" && (
                 <button

@@ -63,6 +63,14 @@ function Login({ onLogin }) {
           required
           className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-900 font-medium focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
         />
+        <div className="mt-2 text-right">
+          <a
+            href="/forgot-password"
+            className="text-sm text-indigo-600 hover:text-indigo-800 font-semibold"
+          >
+            Forgot password?
+          </a>
+        </div>
       </div>
 
       <button
