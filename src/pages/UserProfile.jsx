@@ -96,7 +96,12 @@ export default function UserProfile() {
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      console.error('No file selected');
+      return;
+    }
+
+    console.log('Uploading file:', file.name, file.type, file.size);
 
     try {
       setUploadingAvatar(true);
@@ -104,22 +109,30 @@ export default function UserProfile() {
       formDataObj.append('file', file);
 
       const token = localStorage.getItem('token');
-      const response = await axios.post(
-        'http://localhost:5000/api/users/avatar',
-        formDataObj,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      console.log('Token:', token ? 'Present' : 'Missing');
+      console.log('Sending to:', 'http://localhost:5000/api/users/avatar');
 
-      setUser(response.data);
+      const response = await fetch('http://localhost:5000/api/users/avatar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataObj,
+      });
+
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || `Upload failed with status ${response.status}`);
+      }
+
+      setUser(data);
       alert('Avatar uploaded successfully!');
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      alert('Failed to upload avatar');
+      alert('Failed to upload avatar:\n' + error.message);
     } finally {
       setUploadingAvatar(false);
     }

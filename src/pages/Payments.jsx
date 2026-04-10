@@ -25,31 +25,19 @@ export default function Payments() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
 
-      const projectsResponse = await axios.get(
-        'http://localhost:5000/api/projects',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProjects(projectsResponse.data);
+      // Fetch invoices from backend
+      const invoicesResponse = await axios.get('/invoices');
+      setInvoices(invoicesResponse.data);
 
-      // Fetch invoices (you'll need to create this endpoint)
-      // For now, we'll create mock invoices
-      const mockInvoices = projectsResponse.data
-        .filter(p => p.status === 'in-progress' || p.status === 'completed')
-        .map((p, idx) => ({
-          id: idx + 1,
-          projectId: p._id,
-          projectTitle: p.title,
-          freelancer: p.freelancer?.name || 'Assigned Freelancer',
-          amount: p.budget * (idx % 2 === 0 ? 0.5 : 1),
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          status: idx % 3 === 0 ? 'paid' : idx % 3 === 1 ? 'pending' : 'overdue',
-          sentDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        }));
-      setInvoices(mockInvoices);
+      // Also fetch projects for creating new invoices
+      if (user?.role === 'client') {
+        const projectsResponse = await axios.get('/projects');
+        setProjects(projectsResponse.data);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
+      alert('Error loading invoices');
     } finally {
       setLoading(false);
     }
@@ -62,16 +50,14 @@ export default function Payments() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      // This would need a backend endpoint
-      await axios.post(
-        'http://localhost:5000/api/invoices',
-        {
-          project: selectedProject._id,
-          ...invoiceData,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // Create invoice with the selected project's freelancer
+      await axios.post('/invoices', {
+        project: selectedProject._id,
+        freelancer: selectedProject.freelancer?._id,
+        amount: parseFloat(invoiceData.amount),
+        dueDate: invoiceData.dueDate,
+        description: invoiceData.description || 'Project completion payment',
+      });
 
       alert('Invoice created successfully!');
       setShowInvoiceModal(false);
@@ -80,25 +66,20 @@ export default function Payments() {
       fetchData();
     } catch (error) {
       console.error('Error creating invoice:', error);
-      alert('Failed to create invoice');
+      alert(error.response?.data?.message || 'Failed to create invoice');
     }
   };
 
   const handlePayInvoice = async (invoiceId) => {
     try {
-      const token = localStorage.getItem('token');
-      // This would integrate with a payment gateway like Stripe
-      await axios.post(
-        `http://localhost:5000/api/invoices/${invoiceId}/pay`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // Mark invoice as paid
+      await axios.post(`/invoices/${invoiceId}/mark-paid`, {});
 
       alert('Payment processed successfully!');
       fetchData();
     } catch (error) {
       console.error('Error processing payment:', error);
-      alert('Failed to process payment');
+      alert(error.response?.data?.message || 'Failed to process payment');
     }
   };
 
