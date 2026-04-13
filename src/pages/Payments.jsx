@@ -170,12 +170,12 @@ export default function Payments() {
               <div className="space-y-4">
                 {invoices.map(invoice => (
                   <div
-                    key={invoice.id}
+                    key={invoice._id}
                     className="border rounded-lg p-6 hover:bg-gray-50 transition flex justify-between items-start"
                   >
                     <div className="flex-grow">
-                      <h3 className="font-semibold text-gray-900 mb-2">{invoice.projectTitle}</h3>
-                      <p className="text-sm text-gray-600 mb-2">From: {invoice.freelancer}</p>
+                      <h3 className="font-semibold text-gray-900 mb-2">{invoice.project?.title || 'Project'}</h3>
+                      <p className="text-sm text-gray-600 mb-2">From: {invoice.freelancer?.name || 'Unknown'}</p>
                       <p className="text-sm text-gray-600">Due: {new Date(invoice.dueDate).toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
@@ -191,7 +191,7 @@ export default function Payments() {
                       </span>
                       {invoice.status !== 'paid' && user?.role === 'client' && (
                         <button
-                          onClick={() => handlePayInvoice(invoice.id)}
+                          onClick={() => handlePayInvoice(invoice._id)}
                           className="block w-full mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm font-medium"
                         >
                           Pay Now
@@ -322,11 +322,11 @@ export default function Payments() {
                   </thead>
                   <tbody>
                     {invoices.map(invoice => (
-                      <tr key={invoice.id} className="border-b hover:bg-gray-50">
+                      <tr key={invoice._id} className="border-b hover:bg-gray-50">
                         <td className="py-3 px-4 text-gray-600">
-                          {new Date(invoice.sentDate).toLocaleDateString()}
+                          {new Date(invoice.paidDate || invoice.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="py-3 px-4 text-gray-900">{invoice.projectTitle}</td>
+                        <td className="py-3 px-4 text-gray-900">{invoice.project?.title || 'Project'}</td>
                         <td className="py-3 px-4 font-semibold text-indigo-600">
                           ₹{invoice.amount.toLocaleString()}
                         </td>

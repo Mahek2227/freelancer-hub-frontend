@@ -33,8 +33,12 @@ export default function Ratings() {
       );
       setUser(userResponse.data);
 
-      // Fetch reviews (you'll need to create this endpoint)
-      // For now, we'll just display the average rating
+      // Fetch reviews for this user
+      const reviewsResponse = await axios.get(
+        `http://localhost:5000/api/reviews/user/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setReviews(reviewsResponse.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {

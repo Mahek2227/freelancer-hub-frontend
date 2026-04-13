@@ -151,7 +151,7 @@ function FreelancerDashboard() {
                       <div className="flex justify-between items-center mt-4">
                         <p className="text-gray-700 font-semibold">₹{project.budget}</p>
                         <a
-                          href={`/project/${project._id}`}
+                          href={`/projects/${project._id}`}
                           className="text-indigo-600 hover:text-indigo-800 font-semibold"
                         >
                           View Project →
