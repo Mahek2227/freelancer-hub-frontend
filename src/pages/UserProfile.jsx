@@ -97,42 +97,51 @@ export default function UserProfile() {
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) {
-      console.error('No file selected');
+      console.error("No file selected");
       return;
     }
 
-    console.log('Uploading file:', file.name, file.type, file.size);
-
     try {
       setUploadingAvatar(true);
-      const formDataObj = new FormData();
-      formDataObj.append('file', file);
+      console.log("Starting avatar upload:", file.name, file.size);
 
-      const token = localStorage.getItem('token');
-      console.log('Token:', token ? 'Present' : 'Missing');
-      console.log('Sending to:', 'http://localhost:5000/api/users/avatar');
+      const formData = new FormData();
+      formData.append("avatar", file);
 
-      const response = await fetch('http://localhost:5000/api/users/avatar', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formDataObj,
-      });
+      const token = localStorage.getItem("token");
 
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Response data:', data);
+      const response = await axios.post(
+        "http://localhost:5000/api/users/upload-avatar",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error(data.message || `Upload failed with status ${response.status}`);
+      console.log("Upload response:", response.data);
+
+      // Update UI with new image from response
+      if (response.data && response.data.profile_picture_url) {
+        console.log("Avatar URL updated to:", response.data.profile_picture_url);
+        
+        // Force React to re-render by creating a new object
+        setUser({ ...response.data });
+        
+        // Update localStorage user data
+        const updatedUser = { ...JSON.parse(localStorage.getItem('user')), ...response.data };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+
+        alert("Avatar uploaded successfully!");
+      } else {
+        console.warn("No profile_picture_url in response");
+        alert("Upload completed but image URL not updated");
       }
 
-      setUser(data);
-      alert('Avatar uploaded successfully!');
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      alert('Failed to upload avatar:\n' + error.message);
+      console.error("Error uploading avatar:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Failed to upload avatar");
     } finally {
       setUploadingAvatar(false);
     }
@@ -193,7 +202,8 @@ export default function UserProfile() {
                   <label className="cursor-pointer">
                     <div className="relative">
                       <img
-                        src={user.profile_picture_url || 'https://via.placeholder.com/120'}
+                        key={user.profile_picture_url}
+                        src={user.profile_picture_url ? `${user.profile_picture_url}?t=${Date.now()}` : 'https://via.placeholder.com/120'}
                         alt={user.name}
                         className="h-32 w-32 rounded-full border-4 border-white shadow-lg object-cover"
                       />
@@ -220,7 +230,8 @@ export default function UserProfile() {
                   </label>
                 ) : (
                   <img
-                    src={user.profile_picture_url || 'https://via.placeholder.com/120'}
+                    key={user.profile_picture_url}
+                    src={user.profile_picture_url ? `${user.profile_picture_url}?t=${Date.now()}` : 'https://via.placeholder.com/120'}
                     alt={user.name}
                     className="h-32 w-32 rounded-full border-4 border-white shadow-lg object-cover"
                   />
