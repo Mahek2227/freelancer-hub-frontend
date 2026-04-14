@@ -45,6 +45,25 @@ function Projects() {
     setBudget("");
     fetchProjects();
   };
+  const submitReview = async (projectId) => {
+  const rating = prompt("Enter rating (1-5):");
+  const comment = prompt("Enter review:");
+
+  if (!rating || !comment) return;
+
+  try {
+    await api.post("/reviews", {
+      projectId,
+      rating,
+      comment,
+    });
+
+    alert("Review submitted!");
+    fetchProjects();
+  } catch (err) {
+    alert("Failed to submit review");
+  }
+};
   const fetchTasks = async (projectId) => {
     try {
       setLoadingTasks(prev => ({ ...prev, [projectId]: true }));
@@ -491,6 +510,7 @@ function Projects() {
               )}
 
               {/* DELIVERABLES */}
+              
               {deliverables[project._id] && deliverables[project._id].length > 0 && (
                 <div className="space-y-3 mb-4">
                   {deliverables[project._id].map((d) => (
@@ -506,7 +526,11 @@ function Projects() {
                           {d.status}
                         </span>
                       </div>
-                      <p className="text-gray-700 text-sm mb-3">{d.message}</p>
+
+                      <p className="text-gray-700 text-sm mb-3">
+                        {d.message}
+                      </p>
+
                       <a
                         href={d.fileUrl}
                         target="_blank"
@@ -516,6 +540,7 @@ function Projects() {
                         View Work →
                       </a>
 
+                      {/* APPROVE BUTTON */}
                       {user?.role === "client" && d.status === "pending" && (
                         <button
                           onClick={() => approveDeliverable(d._id, project._id)}
@@ -526,11 +551,22 @@ function Projects() {
                       )}
                     </div>
                   ))}
+
+                  {/* 🔥 ADD REVIEW BUTTON HERE (ONLY ONCE) */}
+                  {user?.role === "client" && project.status === "completed" && (
+                    <button
+                      onClick={() => submitReview(project._id)}
+                      className="w-full py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg mt-3"
+                    >
+                      Give Review
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           ))}
         </div>
+                      
 
         {/* EMPTY STATE */}
         {projects.length === 0 && (
