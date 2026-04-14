@@ -44,7 +44,7 @@ export default function Chat() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'http://localhost:5000/api/messages/conversations',
+        'messages/conversations',
         { participantId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -75,7 +75,7 @@ export default function Chat() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/messages/conversations', {
+      const response = await axios.get('messages/conversations', {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -108,7 +108,7 @@ export default function Chat() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5000/api/messages/${selectedConversation._id}`,
+        `messages/${selectedConversation._id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -136,7 +136,7 @@ export default function Chat() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        'http://localhost:5000/api/messages',
+        'messages',
         {
           conversationId: selectedConversation._id,
           text: messageText,

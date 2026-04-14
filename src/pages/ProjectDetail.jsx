@@ -40,28 +40,28 @@ export default function ProjectDetail() {
 
       // Fetch project details
       const projectResponse = await axios.get(
-        `http://localhost:5000/api/projects/${projectId}`,
+        `projects/${projectId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProject(projectResponse.data);
 
       // Fetch proposals
       const proposalsResponse = await axios.get(
-        `http://localhost:5000/api/proposals?projectId=${projectId}`,
+        `proposals?projectId=${projectId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProposals(proposalsResponse.data);
 
       // Fetch deliverables
       const deliverablesResponse = await axios.get(
-        `http://localhost:5000/api/deliverables/${projectId}`,
+        `deliverables/${projectId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setDeliverables(deliverablesResponse.data);
 
       // Fetch tasks
       const tasksResponse = await axios.get(
-        `http://localhost:5000/api/tasks/${projectId}`,
+        `tasks/${projectId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTasks(tasksResponse.data);
@@ -77,7 +77,7 @@ export default function ProjectDetail() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        'http://localhost:5000/api/proposals',
+        'proposals',
         {
           project: projectId,
           ...formData,
@@ -99,7 +99,7 @@ export default function ProjectDetail() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        'http://localhost:5000/api/deliverables',
+        'deliverables',
         {
           projectId: projectId,
           message: deliverableForm.message,
@@ -122,7 +122,7 @@ export default function ProjectDetail() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:5000/api/deliverables/approve/${deliverableId}`,
+        `deliverables/approve/${deliverableId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -135,6 +135,34 @@ export default function ProjectDetail() {
     }
   };
 
+  const submitReview = async () => {
+  const rating = prompt("Enter rating (1-5):");
+  const comment = prompt("Enter review:");
+
+  if (!rating || !comment) return;
+
+  try {
+    const token = localStorage.getItem('token');
+
+    await axios.post(
+      "reviews",
+      {
+        projectId: projectId,
+        rating,
+        comment,
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    showToast("Review submitted!", "success");
+    fetchProjectDetails();
+
+  } catch (error) {
+    console.error(error);
+    showToast("Failed to submit review", "error");
+  }
+};
+
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
@@ -144,7 +172,7 @@ export default function ProjectDetail() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `http://localhost:5000/api/projects/${projectId}`,
+        `projects/${projectId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       showToast('Project deleted successfully!', 'success');
@@ -385,6 +413,14 @@ export default function ProjectDetail() {
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Status</p>
                       <p className="font-medium text-gray-900 capitalize">{project.status}</p>
+                      {project.freelancer && (
+                      <div className="mt-3">
+                      <p className="text-sm text-gray-600 mb-1">Assigned Freelancer</p>
+                      <p className="font-medium text-gray-900">
+                      {project.freelancer.name} ({project.freelancer.email})
+                      </p>
+                      </div>
+                  )}
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Posted</p>
@@ -439,9 +475,23 @@ export default function ProjectDetail() {
 
                       {isOwner && proposal.status === 'pending' && (
                         <button
-                          onClick={() => {
-                            // Handle accept proposal
-                            console.log('Accept proposal:', proposal._id);
+                          onClick={async () => {
+                        try {
+                         const token = localStorage.getItem('token');
+
+                              await axios.put(
+                                `proposals/accept/${proposal._id}`,
+                                {},
+                                { headers: { Authorization: `Bearer ${token}` } }
+                              );
+
+                              showToast("Proposal accepted!", "success");
+                              fetchProjectDetails();
+
+                            } catch (error) {
+                              console.error(error);
+                              showToast("Failed to accept proposal", "error");
+                            }
                           }}
                           className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                         >

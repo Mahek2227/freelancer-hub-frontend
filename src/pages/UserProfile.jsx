@@ -34,8 +34,8 @@ export default function UserProfile() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const endpoint = userId
-        ? `http://localhost:5000/api/users/${userId}`
-        : `http://localhost:5000/api/users/profile`;
+        ? `users/${userId}`
+        : `usersprofile`;
 
       const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
@@ -80,7 +80,7 @@ export default function UserProfile() {
       };
 
       const response = await axios.put(
-        'http://localhost:5000/api/users/profile',
+        'users/profile',
         updateData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -111,7 +111,7 @@ export default function UserProfile() {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "http://localhost:5000/api/users/upload-avatar",
+        "users/upload-avatar",
         formData,
         {
           headers: {

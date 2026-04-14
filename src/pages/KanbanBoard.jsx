@@ -34,13 +34,13 @@ export default function KanbanBoard() {
       const token = localStorage.getItem('token');
 
       const projectResponse = await axios.get(
-        `http://localhost:5000/api/projects/${projectId}`,
+        `projects/${projectId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProject(projectResponse.data);
 
       const tasksResponse = await axios.get(
-        `http://localhost:5000/api/tasks/${projectId}`,
+        `tasks/${projectId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTasks(tasksResponse.data);
@@ -61,7 +61,7 @@ export default function KanbanBoard() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'http://localhost:5000/api/tasks',
+        'tasks',
         {
           project: projectId,
           title: newTaskTitle,
@@ -93,7 +93,7 @@ export default function KanbanBoard() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.put(
-        `http://localhost:5000/api/tasks/${draggedTask._id}`,
+        `tasks/${draggedTask._id}`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -114,7 +114,7 @@ export default function KanbanBoard() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `http://localhost:5000/api/tasks/${taskId}`,
+        `tasks/${taskId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

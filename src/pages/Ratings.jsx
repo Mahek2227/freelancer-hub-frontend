@@ -28,14 +28,14 @@ export default function Ratings() {
 
       // Fetch user
       const userResponse = await axios.get(
-        `http://localhost:5000/api/users/${userId}`,
+        `users/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUser(userResponse.data);
 
       // Fetch reviews for this user
       const reviewsResponse = await axios.get(
-        `http://localhost:5000/api/reviews/user/${userId}`,
+        `reviews/user/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setReviews(reviewsResponse.data);
@@ -56,7 +56,7 @@ export default function Ratings() {
       const token = localStorage.getItem('token');
       // This would need a backend endpoint
       await axios.post(
-        `http://localhost:5000/api/reviews`,
+        `reviews`,
         {
           ratedUser: userId,
           ...formData,
