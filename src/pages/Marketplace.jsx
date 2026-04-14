@@ -41,7 +41,7 @@ export default function Marketplace() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/projects', {
+      const response = await axios.get('projects', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -100,7 +100,7 @@ export default function Marketplace() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        'http://localhost:5000/api/proposals',
+        'proposals',
         {
           project: selectedProposal._id,
           ...proposalForm,
