@@ -8,6 +8,7 @@ export default function UserProfile() {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [projectsCount, setProjectsCount] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -29,71 +30,96 @@ export default function UserProfile() {
     fetchUserData();
   }, [userId]);
 
-  const fetchUserData = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const endpoint = userId
-        ? `users/${userId}`
-        : `usersprofile`;
 
-      const response = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
+ const fetchUserData = async () => {
+  try {
+    setLoading(true);
+
+    const token = localStorage.getItem("token");
+
+    const endpoint = userId
+      ? `users/${userId}`
+      : `users/profile`; // ✅ FIXED
+
+    // 🔹 1. Fetch user
+    const response = await axios.get(endpoint, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setUser(response.data);
+
+    // 🔹 2. Fetch projects
+    const projectsRes = await axios.get("projects", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    let completedCount = 0;
+
+    if (response.data.role === "freelancer") {
+      completedCount = projectsRes.data.filter(
+        (p) =>
+          p.freelancer?._id === response.data._id &&
+          p.status === "completed"
+      ).length;
+    } else {
+      completedCount = projectsRes.data.filter(
+        (p) =>
+          p.client?._id === response.data._id &&
+          p.status === "completed"
+      ).length;
+    }
+
+    // 🔹 3. Save to state
+    setProjectsCount(completedCount);
+
+    // 🔹 4. Keep your existing form logic
+    if (isOwnProfile) {
+      setFormData({
+        name: response.data.name,
+        email: response.data.email,
+        phone: response.data.phone || "",
+        bio: response.data.bio || "",
+        skills: (response.data.skills || []).join(", "),
+        hourly_rate: response.data.hourly_rate || "",
+        portfolio_link: response.data.portfolio_link || "",
+        company_name: response.data.company_name || "",
+        company_size: response.data.company_size || "",
+        availability: response.data.availability || "full-time",
       });
-
-      setUser(response.data);
-      if (isOwnProfile) {
-        setFormData({
-          name: response.data.name,
-          email: response.data.email,
-          phone: response.data.phone || '',
-          bio: response.data.bio || '',
-          skills: (response.data.skills || []).join(', '),
-          hourly_rate: response.data.hourly_rate || '',
-          portfolio_link: response.data.portfolio_link || '',
-          company_name: response.data.company_name || '',
-          company_size: response.data.company_size || '',
-          availability: response.data.availability || 'full-time',
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
+  } catch (error) {
+    console.error("Error fetching user:", error);
+  } finally {
+    setLoading(false);
+  }
+};
   const handleSaveProfile = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const updateData = {
-        ...formData,
-        skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
-      };
+  try {
+    const token = localStorage.getItem("token");
 
-      const response = await axios.put(
-        'users/profile',
-        updateData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    const res = await axios.put(
+      "/users/profile",
+      formData,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
-      setUser(response.data);
-      setIsEditing(false);
-      alert('Profile updated successfully!');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Failed to update profile');
-    }
-  };
+    // ✅ update UI
+    setUser(res.data);
 
+    // ✅ update localStorage
+    localStorage.setItem("user", JSON.stringify(res.data));
+
+    alert("Profile updated successfully");
+
+  } catch (error) {
+    console.log(error);
+    alert("Error updating profile");
+  }
+};
+
+  
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) {
@@ -146,6 +172,15 @@ export default function UserProfile() {
       setUploadingAvatar(false);
     }
   };
+
+    const handleInputChange = (e) => {
+  const { name, value } = e.target;
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
 
   if (loading) {
     return (
@@ -305,9 +340,10 @@ export default function UserProfile() {
             </div>
 
             {/* Stats Section */}
+            {user.role === 'freelancer' && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 pb-8 border-b">
               <div className="text-center">
-                <p className="text-2xl font-bold text-indigo-600">{user.total_projects_completed || 0}</p>
+                <p className="text-2xl font-bold text-indigo-600">{projectsCount}</p>
                 <p className="text-sm text-gray-600">Projects Done</p>
               </div>
               <div className="text-center">
@@ -325,7 +361,7 @@ export default function UserProfile() {
                 </div>
               )}
             </div>
-
+            )}
             {/* Bio Section */}
             {!isEditing ? (
               <div className="mb-8">

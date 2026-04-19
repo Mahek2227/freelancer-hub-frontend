@@ -45,22 +45,25 @@ function Projects() {
     setBudget("");
     fetchProjects();
   };
-  const submitReview = async (projectId) => {
+  
+  const submitReview = async (project) => {
   const rating = prompt("Enter rating (1-5):");
-  const comment = prompt("Enter review:");
+  const reviewText = prompt("Enter review:");
 
-  if (!rating || !comment) return;
+  if (!rating || !reviewText) return;
 
   try {
     await api.post("/reviews", {
-      projectId,
-      rating,
-      comment,
+      ratedUser: project.freelancer?._id,   // ✅ FIX 1 (VERY IMPORTANT)
+      projectId: project._id,               // ✅ FIX 2
+      rating: Number(rating),
+      review: reviewText                   // ✅ FIX 3 (name must be "review")
     });
 
     alert("Review submitted!");
     fetchProjects();
   } catch (err) {
+    console.error(err);
     alert("Failed to submit review");
   }
 };
@@ -555,7 +558,7 @@ function Projects() {
                   {/* 🔥 ADD REVIEW BUTTON HERE (ONLY ONCE) */}
                   {user?.role === "client" && project.status === "completed" && (
                     <button
-                      onClick={() => submitReview(project._id)}
+                      onClick={() => submitReview(project)}
                       className="w-full py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg mt-3"
                     >
                       Give Review

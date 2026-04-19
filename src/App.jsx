@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -16,6 +16,10 @@ import KanbanBoard from "./pages/KanbanBoard";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
+import { generateToken, onMessageListener } from "./firebase";
+import Notifications from "./pages/Notifications";
+import NotificationBell from "./components/NotificationBell";
+
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -25,12 +29,27 @@ function App() {
   const [isRegistering, setIsRegistering] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
+  useEffect(() => {
+  generateToken();
 
+  onMessageListener().then((payload) => {
+    console.log("Message received:", payload);
+    alert(payload.notification.title);
+  });
+}, []);
+ useEffect(() => {
+    onMessageListener().then(payload => {
+      alert(
+        payload.notification.title + " - " + payload.notification.body
+      );
+    });
+  }, []);
   const handleLogout = () => {
     localStorage.clear();
     setIsLoggedIn(false);
     window.location.href = "/";
   };
+  
 
   // AUTH PAGES
   if (!isLoggedIn) {
@@ -138,6 +157,7 @@ function App() {
             </a>
 
             <div className="flex items-center gap-4 md:gap-6 flex-wrap justify-end">
+              <NotificationBell />
               <a
                 href={user?.role === "freelancer" ? "/freelancer-dashboard" : "/client-dashboard"}
                 className="text-gray-800 hover:text-indigo-600 font-semibold transition-colors"
@@ -208,6 +228,7 @@ function App() {
             <Route path="/payments" element={<Payments />} />
             <Route path="/kanban/:projectId" element={<KanbanBoard />} />
             <Route path="/update-password" element={<UpdatePassword />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route
               path="/freelancer-dashboard"
               element={

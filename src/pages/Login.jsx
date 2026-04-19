@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { generateToken } from "../firebase";
 import api from "../api/axios";
 
 function Login({ onLogin }) {
@@ -8,26 +9,47 @@ function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
+  try {
+    const res = await api.post("/auth/login", {
+      email,
+      password,
+    });
+
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+
+    // 🔥 NEW PART (this was missing)
     try {
-      const res = await api.post("/auth/login", {
-        email,
-        password,
-      });
+  const fcmToken = await generateToken();
+  console.log("🔥 GENERATED TOKEN:", fcmToken);
+  if (fcmToken) {
+    await api.post(
+      "/users/save-token",
+      { token: fcmToken },
+      {
+        headers: {
+          Authorization: `Bearer ${res.data.token}`,
+        },
+      }
+    );
+  }
+} catch (err) {
+  console.log("Notification setup failed — ignoring");
+}
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+    
 
-      onLogin();
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+    onLogin();
+  } catch (err) {
+    setError(err.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

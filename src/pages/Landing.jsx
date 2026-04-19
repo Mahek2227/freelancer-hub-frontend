@@ -13,8 +13,9 @@ function Landing() {
               <span className="text-white font-bold text-lg">FH</span>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Freelancer Hub</h1>
+            
           </div>
-
+             
           <div className="flex gap-4">
             <button
               onClick={() => navigate("/login")}

@@ -1,25 +1,62 @@
+
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
+
 
 function FreelancerDashboard() {
   const [projects, setProjects] = useState([]);
   const [proposals, setProposals] = useState([]);
   const [earnings, setEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
-
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [user, setUser] = useState(null);
+  
+  
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  const fetchEarnings = async () => {
+    try {
+      const res = await api.get("/invoices");
 
+      const total = res.data
+        .filter(inv => inv.status === "paid")
+        .reduce((sum, inv) => sum + inv.amount, 0);
+
+      setEarnings(total);
+    } catch (err) {
+      console.error("Error fetching earnings:", err);
+    }
+  };
+
+  fetchEarnings();
+}, []);
+
+   useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      const res = await api.get("/users/profile");
+      setUser(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  fetchUser();
+}, []);
+
+  useEffect(() => {
+  if (user) {
+    fetchDashboardData();
+  }
+}, [user]);
+  
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       
       // Fetch projects where freelancer is assigned
       const projectsRes = await api.get("/projects");
-      const activeProjects = projectsRes.data.filter(p => p.freelancer?._id === user._id);
+      const activeProjects = projectsRes.data.filter(p => p.freelancer?._id === (user?._id));
       setProjects(activeProjects);
 
       // Fetch proposals submitted by freelancer
@@ -112,6 +149,7 @@ function FreelancerDashboard() {
               <div className="text-4xl">💰</div>
             </div>
           </div>
+          
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -239,36 +277,32 @@ function FreelancerDashboard() {
             </div>
 
             {/* QUICK STATS */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Stats</h3>
+            {/* QUICK STATS - ONLY FOR FREELANCER */}
+            {user?.role === "freelancer" && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Stats</h3>
 
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Success Rate</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full"
-                      style={{ width: "85%" }}
-                    ></div>
+                <div className="space-y-4">
+
+                  {/* ⭐ Rating */}
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Rating</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      ⭐ {user.average_rating ? user.average_rating.toFixed(1) : "No ratings yet"}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-900 font-semibold mt-1">85%</p>
-                </div>
 
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Rating</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    ⭐ {user?.average_rating || "No ratings yet"}
-                  </p>
-                </div>
+                  {/* 📝 Reviews */}
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Total Reviews</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      {user.total_reviews || 0} reviews
+                    </p>
+                  </div>
 
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Total Reviews</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {user?.total_reviews || 0} reviews
-                  </p>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* QUICK LINKS */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">

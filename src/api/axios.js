@@ -1,15 +1,18 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://freelancer-hub-backend-m8f0.onrender.com/api",
+    baseURL: "http://localhost:5000/api"
+  //baseURL: "https://freelancer-hub-backend-m8f0.onrender.com/api",
 });
 
 // attach token automatically
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 

@@ -4,6 +4,7 @@ import api from "../api/axios";
 
 function ClientDashboard() {
   const navigate = useNavigate();
+  
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [incomingProposals, setIncomingProposals] = useState([]);
@@ -59,15 +60,21 @@ function ClientDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* HEADER */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.name}! 👋
-          </h1>
-          <p className="text-gray-600 font-medium">
-            Manage your projects and collaborate with freelancers
-          </p>
-        </div>
+        {/* HEADER + BELL */}
+          <div className="flex justify-between items-center mb-8">
 
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                Welcome back, {user?.name}! 👋
+              </h1>
+              <p className="text-gray-600 font-medium">
+                Manage your projects and collaborate with freelancers
+              </p>
+            </div>
+
+            
+
+          </div>
         {/* STATS CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {/* Total Projects */}
