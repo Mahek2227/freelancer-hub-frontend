@@ -6,32 +6,43 @@ function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* NAVBAR */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">FH</span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">Freelancer Hub</h1>
-            
-          </div>
-             
-          <div className="flex gap-4">
-            <button
-              onClick={() => navigate("/login")}
-              className="px-6 py-2 text-gray-900 font-semibold hover:text-indigo-600 transition-colors"
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => navigate("/register")}
-              className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      </nav>
+    <nav className="bg-white shadow-sm">
+  <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    
+    {/* LEFT SIDE (LOGO + TITLE) */}
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-indigo-500 to-pink-500 rounded-xl">
+        <img 
+          src="/logo.png" 
+          alt="logo" 
+          className="w-6 h-6 object-contain"
+        />
+      </div>
+
+      <h1 className="text-2xl font-bold text-gray-900">
+        Freelancer Hub
+      </h1>
+    </div>
+
+    {/* RIGHT SIDE (BUTTONS) */}
+    <div className="flex gap-4">
+      <button
+        onClick={() => navigate("/login")}
+        className="px-6 py-2 text-gray-900 font-semibold hover:text-indigo-600 transition-colors"
+      >
+        Sign In
+      </button>
+
+      <button
+        onClick={() => navigate("/register")}
+        className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+      >
+        Get Started
+      </button>
+    </div>
+
+  </div>
+</nav>
 
       {/* HERO SECTION */}
       <section className="max-w-7xl mx-auto px-6 py-20 text-center">
