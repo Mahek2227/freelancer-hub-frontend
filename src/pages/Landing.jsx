@@ -7,15 +7,15 @@ function Landing() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* NAVBAR */}
     <nav className="bg-white shadow-sm">
-  <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+  <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
     
     {/* LEFT SIDE (LOGO + TITLE) */}
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-indigo-500 to-pink-500 rounded-xl">
+    <div className="flex items-center gap-4">
+      <div className="p-2 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-xl">
         <img 
           src="/logo.png" 
           alt="logo" 
-          className="w-6 h-6 object-contain"
+          className="h-10 w-10 object-contain"
         />
       </div>
 
@@ -23,6 +23,8 @@ function Landing() {
         Freelancer Hub
       </h1>
     </div>
+
+    
 
     {/* RIGHT SIDE (BUTTONS) */}
     <div className="flex gap-4">
