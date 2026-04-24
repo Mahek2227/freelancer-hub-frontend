@@ -34,11 +34,15 @@ export const onMessageListener = () => {
   onMessage(messaging, (payload) => {
     console.log("Notification received:", payload);
 
-    
+    // 🔥 FORCE SHOW NOTIFICATION (foreground)
     if (Notification.permission === "granted") {
-      new Notification(payload.notification.title, {
-        body: payload.notification.body,
-        icon: "/logo.png",
+      navigator.serviceWorker.getRegistration().then((registration) => {
+        if (registration) {
+          registration.showNotification(payload.notification.title, {
+            body: payload.notification.body,
+            icon: "/logo.png",
+          });
+        }
       });
     }
   });
