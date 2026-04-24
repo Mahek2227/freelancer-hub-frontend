@@ -28,12 +28,18 @@ export const generateToken = async () => {
 };
 
 // 🔥 FOREGROUND LISTENER
-export const onMessageListener = () =>
-  new Promise((resolve) => {
-    const messaging = getMessaging(app);
+export const onMessageListener = () => {
+  const messaging = getMessaging(app);
 
-    onMessage(messaging, (payload) => {
-      console.log("Notification received:", payload);
-      resolve(payload);
-    });
+  onMessage(messaging, (payload) => {
+    console.log("Notification received:", payload);
+
+    
+    if (Notification.permission === "granted") {
+      new Notification(payload.notification.title, {
+        body: payload.notification.body,
+        icon: "/logo.png",
+      });
+    }
   });
+};

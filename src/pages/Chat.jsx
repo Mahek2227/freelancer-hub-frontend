@@ -28,12 +28,16 @@ export default function Chat() {
   }, [location.state?.startConversationWith, loading]);
 
   useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages();
-      const interval = setInterval(fetchMessages, 3000); // Polling every 3 seconds
-      return () => clearInterval(interval);
-    }
-  }, [selectedConversation]);
+  if (!selectedConversation) return;
+
+  fetchMessages(); // load immediately
+
+  const interval = setInterval(() => {
+    fetchMessages();
+  }, 1000); // 🔥 change 3000 → 1000
+
+  return () => clearInterval(interval);
+}, [selectedConversation]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

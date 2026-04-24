@@ -30,21 +30,13 @@ function App() {
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
   useEffect(() => {
-  generateToken();
-
-  onMessageListener().then((payload) => {
-    console.log("Message received:", payload);
-    alert(payload.notification.title);
-  });
+  generateToken();      // get FCM token
+  onMessageListener();  // start listening
 }, []);
- useEffect(() => {
-    onMessageListener().then(payload => {
-      alert(
-        payload.notification.title + " - " + payload.notification.body
-      );
-    });
-  }, []);
-  const handleLogout = () => {
+   
+
+
+const handleLogout = () => {
     localStorage.clear();
     setIsLoggedIn(false);
     window.location.href = "/";
