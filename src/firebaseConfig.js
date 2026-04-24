@@ -1,12 +1,12 @@
 import { initializeApp } from "firebase/app";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyB6mN9oxu7W6aiKQdSkIBGQ761m2EQ-hxc",
+  authDomain: "freelancer-hub-13d87.firebaseapp.com",
+  projectId: "freelancer-hub-13d87",
+  storageBucket: "freelancer-hub-13d87.firebasestorage.app",
+  messagingSenderId: "478644119226",
+  appId: "1:478644119226:web:c40c83d35d90ce87634483"
 };
 
 export const app = initializeApp(firebaseConfig);
